@@ -1,0 +1,29 @@
+LIBRARY mt4odbc
+
+EXPORTS
+	OdbcInitEnv
+	OdbcDeInitEnv
+	OdbcConnect
+	OdbcDisconnect
+	OdbcCloseStmt
+	OdbcErrorMsg
+	OdbcErrorCode
+
+	OdbcExecute
+	OdbcQuery
+	OdbcCloseStmt
+
+	OdbcBindColInt
+	OdbcBindColLong
+	OdbcBindColDouble
+	OdbcBindColString
+
+	OdbcGetColInt
+	OdbcGetColLong
+	OdbcGetColDouble
+	OdbcGetColString
+
+	OdbcIsNull
+
+	OdbcTest
+VERSION 1.0
