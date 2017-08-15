@@ -11,3 +11,5 @@ wchar_t *DBErrMsg();
 wchar_t *DBErrCode();
 
 BOOL SQLIsSuccess(SQLRETURN ret);
+
+void SetDiag(wchar_t *code, wchar_t* msg);

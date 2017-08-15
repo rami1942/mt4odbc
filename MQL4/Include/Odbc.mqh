@@ -14,7 +14,7 @@
    int OdbcConnect(string dsName, string userName, string password);
    int OdbcDisconnect();
 
-   int OdbcExec(string sql);
+   int OdbcExecute(string sql);
    ulong OdbcQuery(string sql);
 
    void OdbcCloseStmt(ulong sth);

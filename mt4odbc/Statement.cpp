@@ -159,24 +159,44 @@ BOOL Statement::Column::Init() {
 }
 
 int Statement::GetColInt(int iCol) {
+	if (iCol - 1 < 0 || iCol - 1 >= nCols) {
+		SetDiag(L"X001", L"Invalid columnId");
+		return 0;
+	}
+
 	Column *p = pColumns + (iCol - 1);
 	if (p->nNullCheck == SQL_NULL_DATA) return 0;
 	return *(int*)(p->pBuf);
 }
 
 LONG64 Statement::GetColLong(int iCol) {
+	if (iCol - 1 < 0 || iCol - 1 >= nCols) {
+		SetDiag(L"X001", L"Invalid columnId");
+		return 0;
+	}
+
 	Column *p = pColumns + (iCol - 1);
 	if (p->nNullCheck == SQL_NULL_DATA) return 0L;
 	return *(LONG64*)(p->pBuf);
 }
 
 double Statement::GetColDouble(int iCol) {
+	if (iCol - 1 < 0 || iCol - 1 >= nCols) {
+		SetDiag(L"X001", L"Invalid columnId");
+		return 0;
+	}
+
 	Column *p = pColumns + (iCol - 1);
 	if (p->nNullCheck == SQL_NULL_DATA) return 0.0;
 	return *(double*)(p->pBuf);
 }
 
 wchar_t *Statement::GetColString(int iCol) {
+	if (iCol - 1 < 0 || iCol - 1 >= nCols) {
+		SetDiag(L"X001", L"Invalid columnId");
+		return 0;
+	}
+
 	Column *p = pColumns + (iCol - 1);
 	if (p->nNullCheck == SQL_NULL_DATA) {
 		*(wchar_t*)(p->pBuf) = L'\0';
@@ -185,5 +205,10 @@ wchar_t *Statement::GetColString(int iCol) {
 }
 
 BOOL Statement::IsNull(int iCol) {
+	if (iCol - 1 < 0 || iCol - 1 >= nCols) {
+		SetDiag(L"X001", L"Invalid columnId");
+		return 0;
+	}
+
 	return pColumns[iCol - 1].nNullCheck == SQL_NULL_DATA;
 }

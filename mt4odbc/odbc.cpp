@@ -82,3 +82,8 @@ wchar_t *DBDiag(SQLSMALLINT iHandleType, SQLHANDLE hHandle) {
 	}
 	return NULL;
 }
+
+void SetDiag(wchar_t *code, wchar_t* msg) {
+	lstrcpy(szState, code);
+	lstrcpy(szDiagBuf, msg);
+}
