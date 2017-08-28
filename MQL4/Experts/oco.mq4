@@ -52,7 +52,6 @@ int OnInit() {
       return (INIT_FAILED);
    }
    
-   processOCO();
 
    return(INIT_SUCCEEDED);
 }
@@ -69,12 +68,14 @@ void OnDeinit(const int reason) {
 //+------------------------------------------------------------------+
 void OnTick() {
 //---
+   processOCO();
+
 }
 //+------------------------------------------------------------------+
 
 void processOCO() {
 
-   ulong sth = OdbcQuery("select price1,price2, ticket1, ticket2, current_ticket, lots, buy, tp, sl, next_delta1, next_delta2, id from oco");
+   ulong sth = OdbcQuery("select price1,price2, ticket1, ticket2, current_ticket, lots, buy, tp, sl, next_delta1, next_delta2, id from oco where valid=1");
    if (sth == 0) {
       Print("Query failed.");
       Print(OdbcErrorCode(), OdbcErrorMsg());
@@ -102,7 +103,7 @@ void processOCO() {
             updateNextPrice(sth);
          }
       }
-      
+
       // ticket1, ticket2 -> current_ticket
       int pendTicket1 = OdbcGetColInt(sth, 3);
       int pendTicket2 = OdbcGetColInt(sth, 4);
@@ -115,7 +116,6 @@ void processOCO() {
       
       // if price is set and not ordered, order it.
       orderOCO(sth, 1, 3);
-      
    }   
    OdbcCloseStmt(sth);
 }
@@ -158,9 +158,8 @@ void orderOCO(ulong sth, int col1, int col2) {
 }
 
 void moveToPosition(ulong sth, int ticket, int oco) {
-   if (!OrderDelete(oco)) {
+   if (IsOrderPending(oco) && !OrderDelete(oco)) {
       Print("Can't delete ticket ", oco, " ", ErrorDescription(GetLastError()));
-      return;
    }
 
    int id = OdbcGetColInt(sth, 12);
@@ -223,7 +222,7 @@ int IsOrderClosed(int ticket) {
    if (!OrderSelect(ticket, SELECT_BY_TICKET)) {
       return 0;
    }
-   if (OrderCloseTime() == 0) {
+   if (OrderCloseTime() != 0) {
       return 1;
    }
    return 0;
