@@ -31,25 +31,25 @@ MT4 is 32bit application, so you need 32bit ODBC/redistributable. NOT x64 even t
 See \MQL4\Scripts\export.mq4
 
 ## Use
- #include <Odbc.mqh>
+ #include <Odbc.mqh> 
 
 ## Init, Connect/ DeInit
 
-int OnInit() { 
-   if (!OdbcInitEnv()) { 
-      return (INIT_FAILED); 
-   } 
-   // In the case of SQLite3,  
-   if (!OdbcConnect(dsName, userName, password)) { 
-      return (INIT_FAILED); 
-   } 
-   return(INIT_SUCCEEDED); 
-} 
+	int OnInit() { 
+		if (!OdbcInitEnv()) { 
+		  return (INIT_FAILED); 
+		} 
+		// In the case of SQLite3,  
+		if (!OdbcConnect(dsName, userName, password)) { 
+			return (INIT_FAILED); 
+		} 
+		return(INIT_SUCCEEDED); 
+	} 
  
-void OnDeinit(const int reason) { 
-   OdbcDisconnect();
-   OdbcDeInitEnv(); 
-}
+	void OnDeinit(const int reason) { 
+		OdbcDisconnect();
+		OdbcDeInitEnv(); 
+	}
 
 ## Insert/ Update / Delete
 
@@ -62,7 +62,7 @@ void OnDeinit(const int reason) {
 
 ## Query
 
-	ulong sth = OdbcQuery("select * from foo"); 
+	ulong sth = OdbcQuery("select * from foo"); // You can open more than one cursor 
 	if (sth == 0) { 
 		ERROR 
 	} 
