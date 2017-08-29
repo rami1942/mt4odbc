@@ -28,7 +28,55 @@ MT4 is 32bit application, so you need 32bit ODBC/redistributable. NOT x64 even t
 * Include odbc.mqh from your MQL scripts.
 
 # Sample
-See \MQL4\oco.mq4
+See \MQL4\Scripts\export.mq4
+
+## Use
+ #include <Odbc.mqh>
+
+## Init, Connect/ DeInit
+
+int OnInit() { 
+   if (!OdbcInitEnv()) { 
+      return (INIT_FAILED); 
+   } 
+   // In the case of SQLite3,  
+   if (!OdbcConnect(dsName, userName, password)) { 
+      return (INIT_FAILED); 
+   } 
+   return(INIT_SUCCEEDED); 
+} 
+ 
+void OnDeinit(const int reason) { 
+   OdbcDisconnect();
+   OdbcDeInitEnv(); 
+}
+
+## Insert/ Update / Delete
+
+      string sql = StringConcatenate("insert into usdjpy (time, open, high, low, close) values ('", 
+                     dt, "',", open, ",", high, ",", low, ",", close, ")"); // Prepare/placefolder is not supported. 
+      if (!OdbcExecute(sql)) { // result is true/false. if you want last insert ID, use select last_insert_rowid() / last_insert_id() (Depends on DBMS) 
+         Print("Insert failed."); 
+         Print(OdbcErrorCode(), OdbcErrorMsg()); // You can get error reason 
+	  } 
+
+## Query
+
+	ulong sth = OdbcQuery("select * from foo"); 
+	if (sth == 0) { 
+		ERROR 
+	} 
+    OdbcBindColInt(sth); // First column as int 
+    OdbcBindColDouble(sth); // Second column as double 
+    OdbcBindColLong(sth); // 3rd column as long 
+    OdbcBindColString(sth); // 4th column as string 
+
+	while(OdbcFetch(sth)) { 
+		if (OdbcIsNull(sth, 4)) { // Null check. Column no is base 1. Not base 0
+			string str = OdbcGetColString(sth, 4); // if the column is null, return "" or 0 
+		} 
+	} 
+	OdbCloseStmt(sth); // Free buffer. Don't forget without you want memory leak. 
 
 # Restrictions
 
