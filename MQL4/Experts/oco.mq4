@@ -109,18 +109,24 @@ void processOCO() {
       int pendTicket2 = OdbcGetColInt(sth, 4);
       if (!OdbcIsNull(sth, 3) && !IsOrderPending(pendTicket1)) {
          moveToPosition(sth, pendTicket1, pendTicket2);
-      }
-      if (!OdbcIsNull(sth, 4) && !IsOrderPending(pendTicket2)) {
+      } else if (!OdbcIsNull(sth, 4) && !IsOrderPending(pendTicket2)) {
          moveToPosition(sth, pendTicket2, pendTicket1);
+      } else {
+         // if price is set and not ordered, order it.
+         
+         // Even though moveToPosition is executed, OdbcGetColInt(sth,5) (current_ticket) IS NOT NULL because it is in buffer.
+         orderOCO(sth, 1, 3);
       }
       
-      // if price is set and not ordered, order it.
-      orderOCO(sth, 1, 3);
    }   
    OdbcCloseStmt(sth);
 }
 
 void orderOCO(ulong sth, int col1, int col2) {
+
+   if (!OdbcIsNull(sth, 5)) {
+      return;
+   }
 
    double price1 = OdbcGetColDouble(sth, 1);
    double price2 = OdbcGetColDouble(sth, 2);
@@ -131,12 +137,18 @@ void orderOCO(ulong sth, int col1, int col2) {
    double sl = OdbcGetColDouble(sth, 9);
    int id = OdbcGetColInt(sth, 12);
 
+   string comment = StringConcatenate("oco ID=", id);
+   
    if (!OdbcIsNull(sth, 1) && OdbcIsNull(sth, 3)) {
-      int ticket = processOrder(price1, lots, 1, FALSE, 0, tp, sl, "");
+      int ticket = processOrder(price1, lots, 1, FALSE, 0, tp, sl, comment);
       if (ticket == -1) {
          Print("Can't order ", price1, " ", ErrorDescription(GetLastError()));
+         string sql = StringConcatenate("update oco set ticket1=-1,price1=NULL where id=", id);
+         if (!OdbcExecute(sql)) {
+            Print("update ticket1 failed.", OdbcErrorCode(), " ", OdbcErrorMsg());
+         }
       } else {
-         string sql = StringConcatenate("update oco set ticket1=", ticket, " where id=", id);
+         string sql = StringConcatenate("update oco set ticket1=", ticket, ",price1=NULL where id=", id);
          if (!OdbcExecute(sql)) {
             Print("update ticket1 failed.", OdbcErrorCode(), " ", OdbcErrorMsg());
          }
@@ -144,11 +156,15 @@ void orderOCO(ulong sth, int col1, int col2) {
    }
    
    if (!OdbcIsNull(sth, 2) && OdbcIsNull(sth, 4)) {
-      int ticket = processOrder(price2, lots, 1, FALSE, 0, tp, sl, "");
+      int ticket = processOrder(price2, lots, 1, FALSE, 0, tp, sl, comment);
       if (ticket == -1) {
          Print("Can't order ", price2, " ", ErrorDescription(GetLastError()));
+         string sql = StringConcatenate("update oco set ticket2=-1, price2=NULL where id=", id);
+         if (!OdbcExecute(sql)) {
+            Print("update ticket1 failed.", OdbcErrorCode(), " ", OdbcErrorMsg());
+         }
       } else {
-         string sql = StringConcatenate("update oco set ticket2=",ticket, " where id=", id);
+         string sql = StringConcatenate("update oco set ticket2=",ticket, ",price2=NULL where id=", id);
          if (!OdbcExecute(sql)) {
             Print("update ticket1 failed.", OdbcErrorCode(), " ", OdbcErrorMsg());
          }
@@ -158,10 +174,12 @@ void orderOCO(ulong sth, int col1, int col2) {
 }
 
 void moveToPosition(ulong sth, int ticket, int oco) {
+   Print("Delete oco position ", oco);
    if (IsOrderPending(oco) && !OrderDelete(oco)) {
       Print("Can't delete ticket ", oco, " ", ErrorDescription(GetLastError()));
    }
 
+   Print("Set pending ticket ", ticket, " to current");
    int id = OdbcGetColInt(sth, 12);
    string sql = StringConcatenate("update oco set current_ticket=", ticket, ", ticket1=NULL, ticket2=NULL where id=", id);
    if (!OdbcExecute(sql)) {
@@ -185,7 +203,7 @@ void updateNextPrice(ulong sth) {
    if (!OdbcIsNull(sth, 10)) {
       double newPrice = OrderClosePrice() + next_delta1;
       double tpPrice = newPrice + tp;
-      Print("Request Pending order ", newPrice, " Lots=", lots, " TP=", tpPrice);
+      Print(id, ":Request Pending order1 ", newPrice, " Lots=", lots, " TP=", tpPrice);
       string sql = StringConcatenate("update oco set current_ticket=NULL, price1=", newPrice, " where id=", id);
       if (!OdbcExecute(sql)) {
          Print("Update failed.", OdbcErrorCode(), " ", OdbcErrorMsg());
@@ -196,7 +214,7 @@ void updateNextPrice(ulong sth) {
    if (!OdbcIsNull(sth, 11)) {
       double newPrice = OrderClosePrice() + next_delta2;
       double tpPrice = newPrice + tp;
-      Print("Request Pending order ", newPrice, " Lots=", lots, " TP=", tpPrice);
+      Print(id, ":Request Pending order2 ", newPrice, " Lots=", lots, " TP=", tpPrice);
       string sql = StringConcatenate("update oco set current_ticket=NULL, price2=", newPrice, " where id=", id);
       if (!OdbcExecute(sql)) {
          Print("Update failed.", OdbcErrorCode(), " ", OdbcErrorMsg());
